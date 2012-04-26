@@ -34,6 +34,10 @@ osd.set_font("-*-*-*-*-*-*-" + args.size + "-*-*-*-*-*-*-*")
 screenWidth = 1680
 screenHeight = 1050
 
+if args.execute and args.executefile:
+    print "Conflicting options 'execute' and 'executefile'"
+    exit()
+
 if args.executefile:
     file = open(args.File, "r")
 
