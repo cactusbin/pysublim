@@ -16,6 +16,11 @@ def displaySublim(string, delay):
     time.sleep(delay)
     osd.hide()
 
+def getWord(string):
+    for line in string:
+        for word in line.split(" "):
+            yield word
+
 osd = pyosd.osd()
 
 configparser = ConfigParser.ConfigParser()
@@ -61,10 +66,10 @@ while True:
     else:
         toParse = open(args.File, "r")
 
-    for line in toParse:
-        for word in line.split(" "):
-            word = word.rstrip("\n")
-            displaySublim(word, args.time)
+    for word in getWord(toParse):
+        word = word.rstrip("\n")
+        print word
+        displaySublim(word, args.time)
 
     
     if not (args.loop or args.executefile):
