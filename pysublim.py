@@ -19,7 +19,8 @@ def displaySublim(string, delay):
 def getWord(string):
     for line in string:
         for word in line.split(" "):
-            yield word
+            if not word == "":
+                yield word
 
 osd = pyosd.osd()
 
