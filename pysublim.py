@@ -68,9 +68,7 @@ while True:
 
     for word in getWord(toParse):
         word = word.rstrip("\n")
-        print word
         displaySublim(word, args.time)
-
     
     if not (args.loop or args.executefile):
         break
