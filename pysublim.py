@@ -62,21 +62,16 @@ while True:
     if args.execute:
         toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
     elif args.directory or args.directoryrandom:
-        if files:
-            if args.directoryrandom:
-                file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
-            else:
-                file = open(args.File + "/" + files.pop(), "r")
-            toParse = file
-        else:
+        if not files:
             if not args.loop:
                 break
             files = os.listdir(args.File)
-            if args.directoryrandom:
-                file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
-            else:
-                file = open(args.File + "/" + files.pop(), "r")
-            toParse = file
+
+        if args.directoryrandom:
+            file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
+        else:
+            file = open(args.File + "/" + files.pop(), "r")
+        toParse = file
     else:
         toParse = open(args.File, "r")
 
