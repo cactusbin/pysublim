@@ -2,6 +2,7 @@ import pyosd
 import argparse
 import ConfigParser
 import subprocess
+import os
 
 def displaySublim(string, delay):
     import random
@@ -35,6 +36,7 @@ argparser.add_argument("-t", "--time", type = float, help = "Time in seconds the
 argparser.add_argument("-l", "--loop", help = "Use this option if you wish to loop subliminals until killed", action = "store_true")
 argparser.add_argument("-e", "--execute", help = "Use if you want to execute a command instead of reading from a file", action = "store_true")
 argparser.add_argument("-ef", "--executefile", help = "Use if you want to execute a list of commands from a file", action = "store_true")
+argparser.add_argument("-d", "--directory", help = "Use to display all files in a directory", action = "store_true")
 
 args = argparser.parse_args()
 
@@ -48,13 +50,29 @@ if args.execute and args.executefile:
     print "Conflicting options 'execute' and 'executefile'"
     exit()
 
-if args.executefile:
+if args.executefile and (not args.directory):
     file = open(args.File, "r")
+
+if args.directory:
+    files = os.listdir(args.File)
 
 while True:
     if args.execute:
         toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
-    elif args.executefile:
+    elif args.directory:
+        if files:
+            file = open(args.File + "/" + files.pop(), "r")
+            toParse = file
+        else:
+            if not args.loop:
+                break
+            files = os.listdir(args.File)
+            file = open(args.File + "/" + files.pop(), "r")
+            toParse = file
+    else:
+        toParse = open(args.File, "r")
+
+    if args.executefile:
         command = file.readline().rstrip("\n").split()
 
         if len(command) == 0:
@@ -64,8 +82,6 @@ while True:
             command = file.readline().rstrip("\n").split()
 
         toParse = subprocess.Popen(command, stdout=subprocess.PIPE).stdout
-    else:
-        toParse = open(args.File, "r")
 
     for word in getWord(toParse):
         word = word.rstrip("\n")
