@@ -92,6 +92,3 @@ while True:
     
     if not (args.loop or args.executefile):
         break
-    
-    if not (args.execute or args.executefile):
-        toParse.seek(0)
