@@ -90,5 +90,5 @@ while True:
         word = word.rstrip("\n")
         displaySublim(word, args.time)
     
-    if not (args.loop or args.executefile):
+    if not (args.loop or args.executefile or args.directory or args.directoryrandom):
         break
