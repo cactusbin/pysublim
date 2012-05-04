@@ -3,6 +3,7 @@ import argparse
 import ConfigParser
 import subprocess
 import os
+import random
 
 def displaySublim(string, delay):
     import random
@@ -35,8 +36,9 @@ argparser.add_argument("-s", "--size", help = "Font size (default: 25)", default
 argparser.add_argument("-t", "--time", type = float, help = "Time in seconds the message will be displayed (deafult: .05)", default = .05)
 argparser.add_argument("-l", "--loop", help = "Use this option if you wish to loop subliminals until killed", action = "store_true")
 argparser.add_argument("-e", "--execute", help = "Use if you want to execute a command instead of reading from a file", action = "store_true")
-argparser.add_argument("-ef", "--executefile", help = "Use if you want to execute a list of commands from a file", action = "store_true")
+argparser.add_argument("-ef", "--executefile", help = "Use if you want to execute a list of commands from a file. Can be used with --directory and --directoryrandom.", action = "store_true")
 argparser.add_argument("-d", "--directory", help = "Use to display all files in a directory", action = "store_true")
+argparser.add_argument("-dr", "--directoryrandom", help = "Use to display all files in a directory in random order", action = "store_true")
 
 args = argparser.parse_args()
 
@@ -50,24 +52,30 @@ if args.execute and args.executefile:
     print "Conflicting options 'execute' and 'executefile'"
     exit()
 
-if args.executefile and (not args.directory):
+if args.executefile and not (args.directory or args.directoryrandom):
     file = open(args.File, "r")
 
-if args.directory:
+if args.directory or args.directoryrandom:
     files = os.listdir(args.File)
 
 while True:
     if args.execute:
         toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
-    elif args.directory:
+    elif args.directory or args.directoryrandom:
         if files:
-            file = open(args.File + "/" + files.pop(), "r")
+            if args.directoryrandom:
+                file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
+            else:
+                file = open(args.File + "/" + files.pop(), "r")
             toParse = file
         else:
             if not args.loop:
                 break
             files = os.listdir(args.File)
-            file = open(args.File + "/" + files.pop(), "r")
+            if args.directoryrandom:
+                file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
+            else:
+                file = open(args.File + "/" + files.pop(), "r")
             toParse = file
     else:
         toParse = open(args.File, "r")
