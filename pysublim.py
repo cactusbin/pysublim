@@ -18,10 +18,23 @@ def displaySublim(string, delay):
     time.sleep(delay)
     osd.hide()
 
+def isLink(string):
+    import re
+
+    #Check if its a URL
+    if re.compile('((?:http|https)(?::\\/{2}[\\w]+)(?:[\\/|\\.]?)(?:[^\\s"]*))', re.IGNORECASE | re.DOTALL).search(string):
+        return 1
+
+    #Check for numbers brackets (lynx)
+    if re.compile('(\\[)(\\d+)(\\])',re.IGNORECASE|re.DOTALL).search(string):
+        return 1
+
+    return 0
+
 def getWord(string):
     for line in string:
         for word in line.split(" "):
-            if not word == "":
+            if not word == "" and (not args.striplinks or not isLink(word)):
                 yield word
 
 def getToParse():
@@ -30,7 +43,7 @@ def getToParse():
     elif args.directory or args.directoryrandom:
         if not files:
             if not args.loop:
-                break
+                exit
             files = os.listdir(args.File)
 
         if args.directoryrandom:
@@ -46,7 +59,7 @@ def getToParse():
 
         if len(command) == 0:
             if not args.loop:
-                break
+                exit
             file.seek(0)
             command = file.readline().rstrip("\n").split()
 
@@ -69,6 +82,7 @@ argparser.add_argument("-e", "--execute", help = "Use if you want to execute a c
 argparser.add_argument("-ef", "--executefile", help = "Use if you want to execute a list of commands from a file. Can be used with --directory and --directoryrandom.", action = "store_true")
 argparser.add_argument("-d", "--directory", help = "Use to display all files in a directory", action = "store_true")
 argparser.add_argument("-dr", "--directoryrandom", help = "Use to display all files in a directory in random order", action = "store_true")
+argparser.add_argument("-sl", "--striplinks", help = "Use to strip links and urls from input when using 'lynx -dump'", action = "store_true")
 
 args = argparser.parse_args()
 
