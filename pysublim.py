@@ -24,6 +24,36 @@ def getWord(string):
             if not word == "":
                 yield word
 
+def getToParse():
+    if args.execute:
+        toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
+    elif args.directory or args.directoryrandom:
+        if not files:
+            if not args.loop:
+                break
+            files = os.listdir(args.File)
+
+        if args.directoryrandom:
+            file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
+        else:
+            file = open(args.File + "/" + files.pop(), "r")
+        toParse = file
+    else:
+        toParse = open(args.File, "r")
+
+    if args.executefile:
+        command = file.readline().rstrip("\n").split()
+
+        if len(command) == 0:
+            if not args.loop:
+                break
+            file.seek(0)
+            command = file.readline().rstrip("\n").split()
+
+        toParse = subprocess.Popen(command, stdout=subprocess.PIPE).stdout
+
+    return toParse
+
 osd = pyosd.osd()
 
 configparser = ConfigParser.ConfigParser()
@@ -59,32 +89,7 @@ if args.directory or args.directoryrandom:
     files = os.listdir(args.File)
 
 while True:
-    if args.execute:
-        toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
-    elif args.directory or args.directoryrandom:
-        if not files:
-            if not args.loop:
-                break
-            files = os.listdir(args.File)
-
-        if args.directoryrandom:
-            file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
-        else:
-            file = open(args.File + "/" + files.pop(), "r")
-        toParse = file
-    else:
-        toParse = open(args.File, "r")
-
-    if args.executefile:
-        command = file.readline().rstrip("\n").split()
-
-        if len(command) == 0:
-            if not args.loop:
-                break
-            file.seek(0)
-            command = file.readline().rstrip("\n").split()
-
-        toParse = subprocess.Popen(command, stdout=subprocess.PIPE).stdout
+    toParse = getToParse()
 
     for word in getWord(toParse):
         word = word.rstrip("\n")
