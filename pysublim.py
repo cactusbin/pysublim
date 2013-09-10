@@ -32,10 +32,9 @@ def isLink(string):
     return 0
 
 def getWord(string):
-    for line in string:
-        for word in line.split(" "):
-            if not word == "" and (not args.striplinks or not isLink(word)):
-                yield word
+    for word in string.split(" "):
+        if not word == "" and (not args.striplinks or not isLink(word)):
+            yield word
 
 osd = pyosd.osd()
 
@@ -53,6 +52,7 @@ argparser.add_argument("-ef", "--executefile", help = "Use if you want to execut
 argparser.add_argument("-d", "--directory", help = "Use to display all files in a directory", action = "store_true")
 argparser.add_argument("-dr", "--directoryrandom", help = "Use to display all files in a directory in random order", action = "store_true")
 argparser.add_argument("-sl", "--striplinks", help = "Use to strip links and urls from input when using 'lynx -dump'", action = "store_true")
+argparser.add_argument("-u", "--url", help = "Use to specify a url whose text will be displayed", action = "store_true")
 
 args = argparser.parse_args()
 
@@ -66,15 +66,20 @@ if args.execute and args.executefile:
     print "Conflicting options 'execute' and 'executefile'"
     exit()
 
+if args.url and (args.execute or args.directory or args.executefile):
+    print "Conflicting options, do not use --url with --execute, --executefile, --directory or --directoryrandom"
+    exit()
+
 if args.executefile and not (args.directory or args.directoryrandom):
     file = open(args.File, "r")
 
 if args.directory or args.directoryrandom:
     files = os.listdir(args.File)
 
+toParse = []
 while True:
     if args.execute:
-        toParse = subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout
+        toParse.append(subprocess.Popen(args.File.split(), stdout=subprocess.PIPE).stdout)
     elif args.directory or args.directoryrandom:
         if not files:
             if not args.loop:
@@ -82,12 +87,20 @@ while True:
             files = os.listdir(args.File)
 
         if args.directoryrandom:
-            file = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
+            fileHandler = open(args.File + "/" + files.pop(random.randrange(0, len(files))), "r")
         else:
-            file = open(args.File + "/" + files.pop(), "r")
-        toParse = file
+            fileHandler = open(args.File + "/" + files.pop(), "r")
+        for line in fileHandler:
+            toParse.append(line)
+    elif args.url:
+        from bs4 import BeautifulSoup
+        import urllib
+
+        toParse.append(BeautifulSoup(urllib.urlopen(args.File).read()).get_text())
     else:
-        toParse = open(args.File, "r")
+        fileHandler = open(args.File, "r")
+        for line in fileHandler:
+            toParse.append(line)
 
     if args.executefile:
         command = file.readline().rstrip("\n").split()
@@ -98,11 +111,15 @@ while True:
             file.seek(0)
             command = file.readline().rstrip("\n").split()
 
-        toParse = subprocess.Popen(command, stdout=subprocess.PIPE).stdout
+        toParse.append(subprocess.Popen(command, stdout=subprocess.PIPE).stdout)
 
-    for word in getWord(toParse):
-        word = word.rstrip("\n")
-        displaySublim(word, args.time)
+    for item in toParse:
+        for word in getWord(item):
+            word = word.rstrip("\n")
+            displaySublim(word, args.time)
     
     if not (args.loop or args.executefile or args.directory or args.directoryrandom):
+        break
+
+    if not toParse:
         break
