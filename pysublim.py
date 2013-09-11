@@ -53,6 +53,7 @@ argparser.add_argument("-d", "--directory", help = "Use to display all files in 
 argparser.add_argument("-dr", "--directoryrandom", help = "Use to display all files in a directory in random order", action = "store_true")
 argparser.add_argument("-sl", "--striplinks", help = "Use to strip links and urls from input when using 'lynx -dump'", action = "store_true")
 argparser.add_argument("-u", "--url", help = "Use to specify a url whose text will be displayed", action = "store_true")
+argparser.add_argument("-uf", "--urlfollow", help = "Use to specify a url whose text will be displayed and also follow all links", action = "store_true")
 
 args = argparser.parse_args()
 
@@ -76,6 +77,16 @@ if args.executefile and not (args.directory or args.directoryrandom):
 if args.directory or args.directoryrandom:
     files = os.listdir(args.File)
 
+if args.urlfollow:
+    linkList = [args.File]
+
+if args.url or args.urlfollow:
+    from bs4 import BeautifulSoup
+    import urllib2
+    
+    opener = urllib2.build_opener()
+    opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+
 toParse = []
 while True:
     if args.execute:
@@ -93,10 +104,16 @@ while True:
         for line in fileHandler:
             toParse.append(line)
     elif args.url:
-        from bs4 import BeautifulSoup
-        import urllib
+        toParse.append(BeautifulSoup(opener.open(args.File).read().get_text()))
+    elif args.urlfollow:
+        try:
+            currentPage = BeautifulSoup(opener.open(linkList.pop(0)).read())
+        except:
+            continue
 
-        toParse.append(BeautifulSoup(urllib.urlopen(args.File).read()).get_text())
+        toParse.append(currentPage.get_text())
+        for link in currentPage.find_all("a"):
+            linkList.append(link.get("href"))
     else:
         fileHandler = open(args.File, "r")
         for line in fileHandler:
@@ -116,10 +133,10 @@ while True:
     for item in toParse:
         for word in getWord(item):
             word = word.rstrip("\n")
-            displaySublim(word, args.time)
+            try:
+                displaySublim(word, args.time)
+            except:
+                pass
     
-    if not (args.loop or args.executefile or args.directory or args.directoryrandom):
-        break
-
-    if not toParse:
+    if not (args.loop or args.executefile or args.directory or args.directoryrandom or args.urlfollow):
         break
